@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Lyric Player</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <style>
+      body {
+        /* Latar Belakang Gelap */
+        background: linear-gradient(135deg, #1e1e1e, #333333);
+        color: #f0f0f0;
+        /* Font yang Stylish */
+        font-family: "Poppins", sans-serif;
+        text-align: center;
+        padding-top: 50px;
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      h1 {
+        color: #50fa7b; /* Hijau neon */
+        text-shadow: 0 0 5px #50fa7b; /* Efek neon pada judul */
+        margin-bottom: 30px;
+      }
+      #lyrics {
+        font-size: 2.5rem; /* Ukuran Lebih Besar */
+        font-weight: 700;
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 20px;
+        /* Warna Lirik Aktif yang Menyala */
+        color: #ffffff;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 3px #50fa7b;
+        transition: all 0.3s ease-out; /* Animasi pergantian lirik */
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0 20px;
+      }
+
+      /* --- STYLE UNTUK KARTU PLAYER --- */
+      #audio {
+        display: none; /* Menyembunyikan elemen audio bawaan */
+      }
+      #player-card {
+        background: #282828; /* Warna latar belakang kartu */
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+        width: 320px; /* Lebar kartu */
+        margin-bottom: 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #cover-art {
+        /* Menggunakan gambar cover asli */
+        width: 250px;
+        height: 250px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      }
+      #song-info {
+        color: #e0e0e0;
+        margin-bottom: 20px;
+      }
+      #song-info h3 {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #ffffff;
+      }
+      #song-info p {
+        margin: 5px 0 0;
+        font-size: 0.9rem;
+        color: #b3b3b3;
+      }
+      #controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 25px; /* Jarak antar tombol */
+        margin-bottom: 20px;
+      }
+      .control-button {
+        background: none;
+        border: none;
+        color: #b3b3b3;
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: color 0.2s, transform 0.2s;
+      }
+      .control-button:hover {
+        color: #ffffff;
+        transform: scale(1.1);
+      }
+      #play-pause-button {
+        font-size: 3rem; /* Ukuran khusus untuk tombol play/pause */
+        color: #50fa7b; /* Warna tombol play/pause */
+      }
+      #play-pause-button:hover {
+        color: #69ff8c;
+      }
+      /* Progress Bar dan Time Display */
+      #progress-container {
+        width: 90%;
+        height: 6px;
+        background: #404040;
+        border-radius: 3px;
+        cursor: pointer;
+        margin-bottom: 15px;
+      }
+      #progress-bar {
+        height: 100%;
+        width: 0%;
+        background: #50fa7b;
+        border-radius: 3px;
+      }
+      #time-display {
+        display: flex;
+        justify-content: space-between;
+        width: 90%;
+        font-size: 0.8rem;
+        color: #b3b3b3;
+      }
+      /* --- AKHIR STYLE KARTU PLAYER --- */
+    </style>
+  </head>
+  <body>
+    <div id="player-card">
+      <img
+        id="cover-art"
+        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcF2FpXTOfwNnjAX1L1nzR8A9-JijV4ZSdKg&s"
+        alt="Cover Album"
+      />
+
+      <div id="song-info">
+        <h3>Tante Culik Aku Dong</h3>
+        <p>Gomez Lx</p>
+      </div>
+
+      <div id="progress-container">
+        <div id="progress-bar"></div>
+      </div>
+      <div id="time-display">
+        <span id="current-time">0:00</span>
+        <span id="duration">0:00</span>
+      </div>
+
+      <div id="controls">
+        <button class="control-button"><i class="fas fa-shuffle"></i></button>
+        <button class="control-button"><i class="fas fa-backward"></i></button>
+        <button id="play-pause-button" class="control-button">
+          <i class="fas fa-play"></i>
+        </button>
+        <button class="control-button"><i class="fas fa-forward"></i></button>
+        <button class="control-button"><i class="fas fa-repeat"></i></button>
+      </div>
+    </div>
+
+    <audio id="audio" src="lagu.mp3"></audio>
+
+    <div id="lyrics">Lirik akan muncul di sini...</div>
+
+    <script>
+      const audio = document.getElementById("audio");
+      const lyricsDiv = document.getElementById("lyrics");
+      const playPauseButton = document.getElementById("play-pause-button");
+      const playPauseIcon = playPauseButton.querySelector("i");
+      const progressBar = document.getElementById("progress-bar");
+      const progressContainer = document.getElementById("progress-container");
+      const currentTimeSpan = document.getElementById("current-time");
+      const durationSpan = document.getElementById("duration");
+
+      let parsedLyrics = [];
+      let currentLineIndex = -1;
+
+      // Muat lirik dari file lagu.lrc
+      fetch("lagu.lrc")
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Gagal memuat lagu.lrc. Pastikan file ada.");
+          }
+          return response.text();
+        })
+        .then((text) => {
+          parsedLyrics = parseLRC(text);
+          lyricsDiv.textContent =
+            parsedLyrics[0]?.text || "Mulai putar lagu...";
+        })
+        .catch((err) => {
+          lyricsDiv.textContent = err.message;
+          console.error(err);
+        });
+
+      // Fungsi untuk mem-parsing format LRC (Tidak Berubah)
+      function parseLRC(lrcText) {
+        const lines = lrcText.split(/\r?\n/);
+        const parsed = [];
+        const timeRegex = /\[(\d{2}):(\d{2})\.(\d{2,3})\](.*)/;
+
+        for (const line of lines) {
+          const match = line.match(timeRegex);
+          if (match) {
+            const minutes = parseInt(match[1]);
+            const seconds = parseInt(match[2]);
+            const millis =
+              parseInt(match[3]) * (match[3].length === 2 ? 10 : 1);
+
+            const time = minutes * 60 + seconds + millis / 1000;
+            const text = match[4].trim();
+            if (text) parsed.push({ time, text });
+          }
+        }
+
+        parsed.sort((a, b) => a.time - b.time);
+        return parsed;
+      }
+
+      // --- LOGIKA KONTROL PLAYER ---
+      playPauseButton.addEventListener("click", () => {
+        if (audio.paused) {
+          audio.play();
+          playPauseIcon.classList.remove("fa-play");
+          playPauseIcon.classList.add("fa-pause");
+        } else {
+          audio.pause();
+          playPauseIcon.classList.remove("fa-pause");
+          playPauseIcon.classList.add("fa-play");
+        }
+      });
+
+      audio.addEventListener("timeupdate", () => {
+        // Update progress bar
+        const progressPercent = (audio.currentTime / audio.duration) * 100;
+        progressBar.style.width = `${progressPercent}%`;
+
+        // Update time display
+        currentTimeSpan.textContent = formatTime(audio.currentTime);
+        if (isNaN(audio.duration)) {
+          durationSpan.textContent = "0:00";
+        } else {
+          durationSpan.textContent = formatTime(audio.duration);
+        }
+
+        // Update lyrics (logika ini tetap sama)
+        const currentTime = audio.currentTime;
+        let newIndex = currentLineIndex;
+
+        for (let i = parsedLyrics.length - 1; i >= 0; i--) {
+          if (parsedLyrics[i].time <= currentTime) {
+            newIndex = i;
+            break;
+          }
+        }
+
+        if (newIndex !== currentLineIndex) {
+          currentLineIndex = newIndex;
+          lyricsDiv.textContent = parsedLyrics[currentLineIndex]?.text || "";
+        }
+      });
+
+      audio.addEventListener("loadedmetadata", () => {
+        if (!isNaN(audio.duration)) {
+          durationSpan.textContent = formatTime(audio.duration);
+        }
+      });
+
+      audio.addEventListener("ended", () => {
+        playPauseIcon.classList.remove("fa-pause");
+        playPauseIcon.classList.add("fa-play");
+        progressBar.style.width = "0%";
+        currentTimeSpan.textContent = "0:00";
+      });
+
+      // Fungsi untuk format waktu (misal: 0:00)
+      function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
+      }
+
+      // Klik pada progress container untuk mencari posisi lagu
+      progressContainer.addEventListener("click", (e) => {
+        const width = progressContainer.clientWidth;
+        const clickX = e.offsetX;
+        const duration = audio.duration;
+        audio.currentTime = (clickX / width) * duration;
+      });
+    </script>
+  </body>
+</html>
